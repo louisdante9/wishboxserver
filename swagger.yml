@@ -1,0 +1,802 @@
+swagger: '2.0'
+info:
+  description: "This is the Api documentation for Wishbox app."
+  version: "1.0.0"
+  title: "Wish box"
+  termsOfService: "http://wishbox.co"
+  contact:
+    email: "team@wishbox.co"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "api.wishbox.co"
+basePath: "/v1"
+tags:
+- name: "Authentication"
+  description: "Everything about loging and signing up on wishbox"
+- name: "Wish"
+  description: "Access to wishes, sort, filter and perform crud operations on you wish"
+- name: "User"
+  description: "Get and update user account"
+- name: "Slot"
+  description: "Get and update slot account"
+schemes:
+- "https"
+- "http"
+paths:
+  /signup:
+    post:
+      tags:
+      - "Authentication"
+      summary: "Endpoint for users to login"
+      description: "For a user to be able to create a wish, they need to have an account. This endpoint provides that functionality that allows users create an account."
+      operationId: "createAccount"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User object that needs to be added to the wish box"
+          required: true
+          schema:
+            $ref: "#/definitions/SignupPayload"
+      responses:
+        200:
+          description: "Account created"
+          schema:
+            $ref: "#/definitions/Token"
+        422:
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+            
+  /login:
+    post:
+      tags:
+      - "Authentication"
+      summary: "Endpoint for users to login"
+      description: "For a user to be able to create a wish, they need to have an account. This endpoint provides that functionality that allows users create an account."
+      operationId: "signin"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "query"
+        description: "The user name for login"
+        required: true
+        type: "string"
+      - name: "password"
+        in: "query"
+        description: "The password for login in clear text"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Account created"
+          schema:
+            $ref: "#/definitions/Token"
+        422:
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /logout:
+    post:
+      tags:
+      - "Authentication"
+      summary: "Logs out current logged in user session"
+      description: ""
+      operationId: "logoutUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters: []
+      responses:
+        default:
+          description: "successful operation"
+  /wishes:
+    get:
+      tags:
+      - "Wish"
+      summary: " Gets all wishes in wish box "
+      description: "Users can filter down the wish list using the status
+        query params, status and username.
+        Use case:
+         - Get me all wishes in wish box
+        
+        - Get me all fulfilled wishes in wish box
+        
+        - Get me all pending wishes in wish box
+
+        - Get me all open wishes in wishbox
+         
+        - Get me all fulfilled wishes in wish box for user johdoe
+          
+        - They stated queries can be done for individual user by using the user name as
+          a query param.
+        
+        - Filter down resuklt with title. Users can search user title of the wish box 
+      "
+      operationId: "getWishs"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "query"
+        name: "slotId"
+        type: "string"
+      - $ref: '#/parameters/statusQueryParam'
+      - $ref: '#/parameters/userQueryParam'
+      - $ref: '#/parameters/titleQueryParam'
+      - $ref: '#/parameters/nextQueryParam'
+      - $ref: '#/parameters/limitQueryParam'
+      responses:
+        200:
+          description: "Account created"
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Wish"
+              pagination:
+                $ref: "#/definitions/PaginationMeta"
+        422:
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+    post:
+      tags:
+      - "Wish"
+      summary: "Add a new wishto wish box"
+      description: ""
+      operationId: "addWish"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Wish object that needs to be added to wish box"
+        required: true
+        schema:
+          $ref: "#/definitions/Wish"
+      responses:
+        200:
+          description: "Account created"
+          schema:
+            $ref: "#/definitions/Wish"
+        422:
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+  /wishes/{status}/users/{userId}:
+    get:
+      tags:
+      - "Wish"
+      summary: "Gets all wishes a user has either fulfilled or pending fulfillment"
+      description: "Users should be able get all fulfilled wish of another user."
+      operationId: "userFulfiledWish"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: '#/parameters/userId'
+      - $ref: '#/parameters/statusParam'
+      - $ref: '#/parameters/nextQueryParam'
+      - $ref: '#/parameters/limitQueryParam'
+      responses:
+        200:
+          description: "Account created"
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Wish"
+              pagination:
+                $ref: "#/definitions/PaginationMeta"
+        404:
+          description: "User does not exist"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+  /wishes/{wishId}:
+    get:
+      tags:
+      - "Wish"
+      summary: "get a single wish"
+      description: ""
+      operationId: "getWish"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Wish object that needs to be updated to the store"
+        required: true
+        schema:
+          $ref: "#/definitions/Wish"
+      - $ref: '#/parameters/wishId'
+      responses:
+        422:
+          description: "Validation error"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        404:
+          description: "Wish not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Server Error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+    put:
+      tags:
+      - "Wish"
+      summary: "Update an existing wish"
+      description: ""
+      operationId: "updateWish"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Wish object that needs to be updated to the store"
+        required: true
+        schema:
+          $ref: "#/definitions/Wish"
+      - $ref: '#/parameters/wishId'
+      responses:
+        201:
+          description: "Update successful"
+        422:
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        404:
+          description: "Wish not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+    delete:
+      tags:
+      - "Wish"
+      summary: "Delete an existing wish"
+      description: ""
+      operationId: "deleteWish"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: '#/parameters/wishId'
+      responses:
+        200:
+          description: "Sucessfully deleted a wish"
+        404:
+          description: "Wish not found"
+          schema:
+            $ref: '#/definitions/ApiResponse'
+      security:
+      - bearer_token: []
+  /me:
+    get:
+      tags:
+      - "User"
+      summary: "Get Logged in user details"
+      description: ""
+      operationId: "getLoggedInUser"
+      produces:
+      
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/User"
+        400:
+          description: "Invalid username supplied"
+        404:
+          description: "User not found"  
+      security:
+      - bearer_token: []
+  /users:
+    post:
+      tags:
+      - "User"
+      summary: "Create user"
+      operationId: "createUser"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Created user object"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        200:
+          description: "User was sucessfully created"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/User"
+      security:
+      - bearer_token: []
+  /users/{userId}:
+    get:
+      tags:
+      - "User"
+      summary: "Get user details"
+      description: "
+        This gets all users and their wish counts as metadata
+        - wishes the user has fulfilled for other users - count
+        
+        - wishes the user has opened - count
+        
+        - wishes the user has fulfilled - count
+      "
+      operationId: "getUserById"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#/parameters/userId"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/User"
+        400:
+          description: "Invalid username supplied"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "User not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    put:
+      tags:
+      - "User"
+      summary: "Updated user"
+      description: "This can only be done by the logged in user."
+      operationId: "updateUser"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#/parameters/userId"
+      - in: "body"
+        name: "body"
+        description: "Updated user object"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        201:
+          description: "Update successful"
+        422:
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        404:
+          description: "User not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+    delete:
+      tags:
+      - "User"
+      summary: "Delete user"
+      description: "This can only be done by the Admin. this deletes a user but retains all their 
+        fulfilled wish meta data.    
+      "
+      operationId: "deleteUser"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#/parameters/userId"
+      responses:
+        200:
+          description: "Delete successful"
+        404:
+          description: "User not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+  /slots:
+    get:
+      tags:
+      - "Slot"
+      summary: "Get all slots and wishes open for that slot"
+      operationId: "getAllSlots"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "query"
+        name: "name"
+        type: "string"
+      - $ref: "#/parameters/slotIdQueryParam"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+           type: 'array'
+           items:
+            $ref: "#/definitions/Slot"
+        500:
+          description: "User not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    post:
+      tags:
+      - "Slot"
+      summary: "Creates slot"
+      description: "This can only be done by admin."
+      operationId: "createSlot"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Slot object to create"
+        required: true
+        schema:
+          $ref: "#/definitions/Slot"
+      responses:
+        201:
+          description: "Update successful"
+          schema:
+            $ref: "#/definitions/Slot"
+        422:
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        404:
+          description: "User not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+  /slots/{slotId}:
+    put:
+      tags:
+      - "Slot"
+      summary: "Updated slot"
+      description: "This can only be done by admin."
+      operationId: "updateSlot"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#/parameters/slotId"
+      - in: "body"
+        name: "body"
+        description: "Updated slot object"
+        required: true
+        schema:
+          $ref: "#/definitions/Slot"
+      responses:
+        201:
+          description: "Update successful"
+        422:
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse422"
+        404:
+          description: "Slot not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+    delete:
+      tags:
+      - "Slot"
+      summary: "Delete slot"
+      description: "This can only be done by the Admin. deletes a slot"
+      operationId: "deleteSlot"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#/parameters/slotId"
+      responses:
+        200:
+          description: "Delete successful"
+        404:
+          description: "Slot not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - bearer_token: []
+securityDefinitions:
+  bearer_token:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+definitions:
+  SignupPayload:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      phone:
+        type: "string"
+      username:
+        type: "string"
+      street:
+        type: "string"
+      city:
+        type: "string"
+    required:
+      - email
+      - password
+      - username
+  Wish:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      title:
+        type: "string"
+      details:
+        type: "string"
+      userId:
+        type: "integer"
+        format: "int32"
+      slotId:
+        type: "integer"
+        format: "int32"
+      status:
+        type: "string"
+        description: "Wish Status"
+        enum:
+        - "pending"
+        - "fulfilled"
+        - "open"
+      createdAt:
+        type: "string"
+        format: "date-time"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+    required:
+      - title
+      - userId
+      - slotId
+  Slot:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+      open:
+        type: "boolean"
+        default: true
+      endDate:
+        type: "string"
+        format: "date-time"   
+        description: "This is Start date of the slot
+        "
+      startDate:
+        type: "string"
+        format: "date-time"
+        description: "This is the end date of the slot"
+        enum:
+        - "mins"
+        - "days"
+        - "hours"
+      createdAt:
+        type: "string"
+        format: "date-time"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+  User:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+      username:
+        type: "string"
+      email:
+        type: "string"
+      profileImage:
+        type: "string"
+      phone:
+        type: "string"
+      street:
+        type: "string"
+        description: "The street address of the user"
+      city:
+        type: "string"
+        description: "The city user lives in"
+      state:
+        type: "string"
+        description: "The state user lives in"
+      country:
+        type: "string"
+      createdAt:
+        type: "string"
+        format: "date-time"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+  Token:
+    type: "object"
+    properties:
+      token:
+        type: "string"
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
+  ApiResponse422:
+    type: "object"
+    description: "This is the response definition for 422 error:
+      this is thrown when
+    - When a user tries to access an endpoint with invalid payload
+    "
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
+      errors: 
+        type: "array"
+        items:
+          type: "object"
+        properties:
+          path: 
+            type: "string"
+          details:
+            type: "string"
+  PaginationMeta:
+    type: "object"
+    description: "Contains details of resource pagination"
+    properties:
+      itemCount:
+        type: "integer"
+        format: "int32"
+      pageCount:
+        type: "integer"
+        format: "int32"
+      page:
+        type: "integer"
+        format: "int32"
+      next: 
+        type: "string"
+parameters:
+  wishId:
+    name: "wishId"
+    in: "path"
+    description: "ID of wish"
+    required: true
+    type: "integer"
+    format: "int64"
+  userId:
+    name: "userId"
+    in: "path"
+    description: "ID of user"
+    required: true
+    type: "integer"
+    format: "int64"
+  slotId:
+    name: "slotId"
+    in: "path"
+    description: "ID of slot"
+    required: true
+    type: "integer"
+    format: "int64"
+  statusQueryParam:
+    name: "status"
+    in: "query"
+    description: "Filter wishes query by status"
+    required: false
+    type: "string"
+    enum:
+    - "pending"
+    - "fulfilled"
+    - "open"
+  statusParam:
+    name: "status"
+    in: "path"
+    description: "Filters wishes query by status"
+    required: true
+    type: "string"
+    enum:
+    - "pending"
+    - "fulfilled"
+    - "open"
+  userQueryParam:
+    name: "username"
+    in: "query"
+    description: "Filters wishes query by username"
+    required: false
+    type: "string"
+  titleQueryParam:
+    name: "title"
+    in: "query"
+    description: "Filters wishes query by title"
+    required: false
+    type: "string"
+  slotIdQueryParam:
+    name: "slotId"
+    in: "query"
+    description: "Filter slot by id"
+    required: false
+    type: "string"
+  nextQueryParam:
+    name: "next"
+    in: "query"
+    description: "Filter slot by id"
+    required: false
+    type: "integer"
+  limitQueryParam:
+    name: "limit"
+    in: "query"
+    description: "Filter slot by id"
+    required: false
+    type: "integer"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
