@@ -46,7 +46,7 @@
     "mongoose": "^5.7.3",
     "mongoose-delete": "^0.5.1",
     "nodemon": "^1.11.0",
-    "underscore": "^1.8.3",
+    "underscore": "^1.12.1",
     "winston": "^3.2.1"
   }
 }
